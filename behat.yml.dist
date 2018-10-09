@@ -1,0 +1,20 @@
+default:
+    suites:
+        default:
+            contexts:
+                - ConfigFileContext:
+                - CommandContext:
+                    kernel: '@kernel'
+                    configFactory: '@App\Config\ConfigFactory'
+                    configLoader: '@App\Config\ConfigLoader'
+                - DatabaseContext:
+                    source: '@doctrine.dbal.source_connection'
+                    target: '@doctrine.dbal.target_connection'
+                - ChunkCounterContext:
+                    chunkCounter: '@App\Fogger\Data\ChunkCounter'
+
+    extensions:
+        Behat\Symfony2Extension:
+            kernel:
+                bootstrap: features/bootstrap/bootstrap.php
+                class: App\Kernel

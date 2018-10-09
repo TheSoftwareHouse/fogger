@@ -1,0 +1,51 @@
+version: '2.0'
+services:
+  app:
+    depends_on:
+    - redis
+    - rabbit
+    image: fogger-app:latest
+    volumes:
+    - .:/app
+    - ./var/:/fogger
+    environment:
+      SOURCE_DATABASE_URL: mysql://user:pass@source:3306/source
+      TARGET_DATABASE_URL: mysql://user:pass@target:3306/target
+      RABBITMQ_URL: amqp://user:pass@rabbit:5672
+      REDIS_URL: redis://redis
+  worker:
+    depends_on:
+    - redis
+    - rabbit
+    image: fogger-app:latest
+    volumes:
+    - .:/app
+    - ./var/:/fogger
+    environment:
+      SOURCE_DATABASE_URL: mysql://user:pass@source:3306/source
+      TARGET_DATABASE_URL: mysql://user:pass@target:3306/target
+      RABBITMQ_URL: amqp://user:pass@rabbit:5672
+      REDIS_URL: redis://redis
+    restart: always
+    command: rabbit:consumer --messages=200 fogger_data_chunks
+  redis:
+    image: redis:4
+  rabbit:
+    image: rabbitmq:3
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: pass
+  source:
+    environment:
+      MYSQL_DATABASE: source
+      MYSQL_PASSWORD: pass
+      MYSQL_ROOT_PASSWORD: pass
+      MYSQL_USER: user
+    image: mysql:5.7
+  target:
+    environment:
+      MYSQL_DATABASE: target
+      MYSQL_PASSWORD: pass
+      MYSQL_ROOT_PASSWORD: pass
+      MYSQL_USER: user
+    image: mysql:5.7

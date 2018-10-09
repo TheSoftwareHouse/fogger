@@ -1,0 +1,91 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
+parameters:
+  locale: 'en'
+
+services:
+  # default configuration for services in *this* file
+  _defaults:
+    autowire: true      # Automatically injects dependencies in your services.
+    autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+    public: false       # Allows optimizing the container by removing unused services; this also means
+    # fetching services directly from the container via $container->get() won't work.
+    # The best practice is to be explicit about your dependencies anyway.
+
+  # makes classes in src/ available to be used as services
+  # this creates a service per class whose id is the fully-qualified class name
+  App\:
+    resource: '../src/*'
+    exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
+
+  # controllers are imported separately to make sure services can be injected
+  # as action arguments even if you don't extend any base controller class
+  # App\Controller\:
+  #   resource: '../src/Controller'
+  #   tags: ['controller.service_arguments']
+
+  # add more service definitions when explicit configuration is needed
+  # please note that last definitions always *replace* previous ones
+
+  App\Config\Serializer\ConfigDenormalizer:
+    calls:
+    - [setDenormalizer, ['@serializer']]
+    tags:
+    - { name: 'serializer.normalizer'}
+
+  App\Config\Serializer\TableConfigDenormalizer:
+    calls:
+    - [setDenormalizer, ['@serializer']]
+    tags:
+    - { name: 'serializer.normalizer'}
+
+  App\Fogger\Data\ChunkCounter:
+    arguments:
+    - '@snc_redis.default'
+
+  App\Fogger\Data\ChunkError:
+    arguments:
+    - '@snc_redis.default'
+
+  App\Fogger\Data\ChunkProducer:
+    arguments:
+    - '@old_sound_rabbit_mq.fogger_data_chunks_producer'
+
+  App\Fogger\Data\Writer\GenericInsertWriter:
+    arguments:
+    - '@doctrine.dbal.target_connection'
+    tags:
+    - { name: 'fogger.writer', priority: -128 }
+
+  App\Fogger\Data\Writer\MysqlInfileWriter:
+    arguments:
+    - '@doctrine.dbal.target_connection'
+    - '%kernel.cache_dir%'
+
+  app.fogger.faker_generator:
+    class: Faker\Factory
+    factory: ['Faker\Factory', create]
+
+  App\Fogger\Mask\FakerMask:
+    arguments:
+    - '@app.fogger.faker_generator'
+
+  App\Fogger\Refine\RefineExecutor:
+    arguments:
+    - '@doctrine.dbal.target_connection'
+
+  App\Fogger\Schema\SchemaManipulator:
+    arguments:
+    - "@doctrine.dbal.source_connection"
+    - "@doctrine.dbal.target_connection"
+
+  App\Fogger\Serializer\TableDenormalizer:
+    calls:
+    - [setDenormalizer, ['@serializer']]
+    tags:
+    - { name: 'serializer.normalizer'}
+
+

@@ -1,0 +1,47 @@
+language: php
+
+env:
+  global:
+    - APP_ENV=test
+
+matrix:
+  include:
+    - php: '7.2'
+      services:
+        - postgresql
+        - redis-server
+        - rabbitmq
+      before_script:
+        - psql -c 'create database suorce;' -U postgres
+        - psql -c 'create database target;' -U postgres
+      env:
+        - SOURCE_DATABASE_URL=pgsql://postgres@localhost/suorce
+        - TARGET_DATABASE_URL=pgsql://postgres@localhost/target
+        - RABBITMQ_URL=amqp://guest:guest@localhost
+        - REDIS_URL=redis://localhost
+    - php: '7.2'
+      services:
+        - mysql
+        - redis-server
+        - rabbitmq
+      before_script:
+        - mysql -e 'CREATE DATABASE suorce;'
+        - mysql -e 'CREATE DATABASE target;'
+      env:
+        - SOURCE_DATABASE_URL=mysql://root@localhost/suorce
+        - TARGET_DATABASE_URL=mysql://root@localhost/target
+        - RABBITMQ_URL=amqp://guest:guest@localhost
+        - REDIS_URL=redis://localhost
+
+
+before_install:
+  - echo "memory_limit=-1" >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
+
+install:
+  - composer install --no-progress --no-suggest --ansi;
+
+script:
+  - bin/console cache:clear
+  - vendor/bin/phpspec run
+  - bin/console cache:clear
+  - vendor/bin/behat --format=progress;

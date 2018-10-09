@@ -1,0 +1,8 @@
+services:
+  App\Fogger\Data\ChunkProducer:
+    arguments:
+    - '@old_sound_rabbit_mq.fogger_data_chunks_test_producer'
+    - '@App\Fogger\Data\ChunkDivider'
+    - '@serializer'
+    - '@App\Fogger\Data\ChunkCounter'
+    - '@App\Fogger\Data\ChunkError'
