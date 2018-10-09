@@ -6,6 +6,8 @@ use Psr\Cache\CacheItemPoolInterface;
 
 abstract class AbstractCachedMask extends AbstractMask
 {
+    private const LOCK_VALUE = 'fogger::pending';
+
     /**
      * @var CacheItemPoolInterface
      */
@@ -30,9 +32,15 @@ abstract class AbstractCachedMask extends AbstractMask
             return $value;
         }
 
-        $originalValueCacheItem = $this->cache->getItem(md5($value));
+        do {
+            $originalValueCacheItem = $this->cache->getItem(md5($value));
+        } while ($originalValueCacheItem->get() === self::LOCK_VALUE);
+
         if ($originalValueCacheItem->isHit()) {
             return $originalValueCacheItem->get();
+        } else {
+            $originalValueCacheItem->set(self::LOCK_VALUE);
+            $this->cache->save($originalValueCacheItem);
         }
 
         do {
