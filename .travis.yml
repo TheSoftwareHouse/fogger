@@ -41,7 +41,6 @@ install:
   - composer install --no-progress --no-suggest --ansi;
 
 script:
-  - bin/console cache:clear
   - vendor/bin/phpspec run
   - bin/console cache:clear
   - vendor/bin/behat --format=progress;
