@@ -7,6 +7,10 @@ DOCKER_COMPOSE_TEST_POSTGRES = ${DOCKER_COMPOSE} -f docker-compose.test-postgres
 pull:
 	${DOCKER_COMPOSE} pull
 
+.PHONY: install
+install:
+	${DOCKER_COMPOSE} run --rm --entrypoint="composer" app install
+
 .PHONY: start
 start:
 	${DOCKER_COMPOSE} up -d

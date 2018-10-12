@@ -4,7 +4,7 @@ services:
     depends_on:
     - redis
     - rabbit
-    image: fogger-app:latest
+    image: tshio/fogger:latest
     volumes:
     - .:/app
     - ./var/:/fogger
@@ -17,7 +17,7 @@ services:
     depends_on:
     - redis
     - rabbit
-    image: fogger-app:latest
+    image: tshio/fogger:latest
     volumes:
     - .:/app
     - ./var/:/fogger
