@@ -16,7 +16,7 @@ class MaskStrategyProvider
         }
     }
 
-    public function addMask(MaskStrategyInterface $mask)
+    private function addMask(MaskStrategyInterface $mask)
     {
         $this->masks[] = $mask;
     }

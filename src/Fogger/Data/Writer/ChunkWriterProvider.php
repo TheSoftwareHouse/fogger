@@ -15,7 +15,7 @@ class ChunkWriterProvider
         }
     }
 
-    public function addWriter(ChunkWriterInterface $chunkWriter)
+    private function addWriter(ChunkWriterInterface $chunkWriter)
     {
         $this->chunkWriters[] = $chunkWriter;
     }

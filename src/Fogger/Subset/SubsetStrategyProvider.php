@@ -15,7 +15,7 @@ class SubsetStrategyProvider
         }
     }
 
-    public function addSubsetStrategy(SubsetStrategyInterface $subsetStrategy)
+    private function addSubsetStrategy(SubsetStrategyInterface $subsetStrategy)
     {
         $this->subsetStrategies[] = $subsetStrategy;
     }
