@@ -28,7 +28,7 @@ services:
       RABBITMQ_URL: amqp://user:pass@rabbit:5672
       REDIS_URL: redis://redis
   worker:
-    image: fogger-app:latest
+    image: tshio/fogger:latest
     environment:
       SOURCE_DATABASE_URL: mysql://user:pass@source:3306/source
       TARGET_DATABASE_URL: mysql://user:pass@target:3306/target
