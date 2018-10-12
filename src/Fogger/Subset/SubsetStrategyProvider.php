@@ -8,7 +8,14 @@ class SubsetStrategyProvider
 {
     private $subsetStrategies = [];
 
-    public function addSubsetStrategy(SubsetStrategyInterface $subsetStrategy)
+    public function __construct(iterable $subsetStrategies)
+    {
+        foreach ($subsetStrategies as $subsetStrategy) {
+            $this->addSubsetStrategy($subsetStrategy);
+        }
+    }
+
+    private function addSubsetStrategy(SubsetStrategyInterface $subsetStrategy)
     {
         $this->subsetStrategies[] = $subsetStrategy;
     }

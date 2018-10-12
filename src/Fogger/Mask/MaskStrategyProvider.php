@@ -9,7 +9,14 @@ class MaskStrategyProvider
 {
     private $masks = [];
 
-    public function addMask(MaskStrategyInterface $mask)
+    public function __construct(iterable $masks)
+    {
+        foreach ($masks as $mask) {
+            $this->addMask($mask);
+        }
+    }
+
+    private function addMask(MaskStrategyInterface $mask)
     {
         $this->masks[] = $mask;
     }
