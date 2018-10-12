@@ -6,6 +6,7 @@ use App\Fogger\Data\Writer\Exception\ChunkWriterNotFound;
 
 class ChunkWriterProvider
 {
+    /** @var ChunkWriterInterface[] */
     private $chunkWriters;
 
     public function __construct(iterable $writers)

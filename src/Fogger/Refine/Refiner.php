@@ -69,6 +69,7 @@ class Refiner
     /**
      * @param string $filename
      * @throws Schema\SchemaException
+     * @throws \Doctrine\DBAL\DBALException
      */
     public function refineBasedOnConfig(string $filename)
     {

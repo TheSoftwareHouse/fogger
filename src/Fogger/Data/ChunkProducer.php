@@ -36,7 +36,6 @@ class ChunkProducer
 
     /**
      * @param Table $table
-     * @param int $chunkSize
      * @throws \App\Fogger\Subset\Exception\UnknownSubsetStrategyException
      */
     private function queueTableChunks(Table $table)
