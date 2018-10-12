@@ -8,6 +8,13 @@ class ChunkWriterProvider
 {
     private $chunkWriters;
 
+    public function __construct(iterable $writers)
+    {
+        foreach ($writers as $writer) {
+            $this->addWriter($writer);
+        }
+    }
+
     public function addWriter(ChunkWriterInterface $chunkWriter)
     {
         $this->chunkWriters[] = $chunkWriter;

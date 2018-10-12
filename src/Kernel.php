@@ -2,12 +2,6 @@
 
 namespace App;
 
-use App\DependencyInjection\Compiler\FoggerChunkWriterPass;
-use App\DependencyInjection\Compiler\FoggerMaskStrategyPass;
-use App\DependencyInjection\Compiler\FoggerSubsetStrategyPass;
-use App\Fogger\Data\Writer\ChunkWriterInterface;
-use App\Fogger\Mask\MaskStrategyInterface;
-use App\Fogger\Subset\SubsetStrategyInterface;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\Config\Resource\FileResource;
@@ -39,21 +33,6 @@ class Kernel extends BaseKernel
                 yield new $class();
             }
         }
-    }
-
-    protected function build(ContainerBuilder $container)
-    {
-        $container->registerForAutoconfiguration(MaskStrategyInterface::class)
-            ->addTag('fogger.mask');
-        $container->addCompilerPass(new FoggerMaskStrategyPass());
-
-        $container->registerForAutoconfiguration(SubsetStrategyInterface::class)
-            ->addTag('fogger.subset');
-        $container->addCompilerPass(new FoggerSubsetStrategyPass());
-
-        $container->registerForAutoconfiguration(ChunkWriterInterface::class)
-            ->addTag('fogger.writer');
-        $container->addCompilerPass(new FoggerChunkWriterPass());
     }
 
     protected function configureContainer(ContainerBuilder $container, LoaderInterface $loader)
