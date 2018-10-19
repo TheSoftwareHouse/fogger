@@ -9,8 +9,9 @@ class NoSubset extends AbstractSubset
 {
     const STRATEGY_NAME = 'noSubset';
 
-    public function subsetQuery(QueryBuilder $queryBuilder, Table $table)
+    public function subsetQuery(QueryBuilder $queryBuilder, Table $table): QueryBuilder
     {
+        return $queryBuilder;
     }
 
     public function getSubsetStrategyName(): string

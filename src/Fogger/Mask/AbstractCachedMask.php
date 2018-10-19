@@ -20,6 +20,11 @@ abstract class AbstractCachedMask extends AbstractMask
 
     abstract protected function getSubstitution(array $options = []): ?string;
 
+    private function forgeCacheKey(string $value, array $options)
+    {
+        return md5(sprintf("%s.%s.%s", $value, $this->getMaskName(), json_encode($options)));
+    }
+
     /**
      * @param null|string $value
      * @param array $options
@@ -33,7 +38,7 @@ abstract class AbstractCachedMask extends AbstractMask
         }
 
         do {
-            $originalValueCacheItem = $this->cache->getItem(md5($value));
+            $originalValueCacheItem = $this->cache->getItem($this->forgeCacheKey($value, $options));
         } while ($originalValueCacheItem->get() === self::LOCK_VALUE);
 
         if ($originalValueCacheItem->isHit()) {
@@ -45,7 +50,7 @@ abstract class AbstractCachedMask extends AbstractMask
 
         do {
             $substitution = $this->getSubstitution($options);
-            $substitutionCacheItem = $this->cache->getItem(md5($substitution));
+            $substitutionCacheItem = $this->cache->getItem($this->forgeCacheKey($substitution, $options));
         } while ($substitutionCacheItem->isHit());
         $this->cache->save($substitutionCacheItem);
 

@@ -2,7 +2,7 @@
 
 namespace App\Fogger\Refine;
 
-use App\Fogger\Recipe\RecipeFactory;
+use App\Fogger\Recipe\Recipe;
 use App\Fogger\Recipe\Table;
 use App\Fogger\Schema\ForeignKeysExtractor;
 use App\Fogger\Subset\NoSubset;
@@ -10,18 +10,14 @@ use Doctrine\DBAL\Schema as Schema;
 
 class Refiner
 {
-    private $recipeFactory;
-
     private $extractor;
 
     private $refineExecutor;
 
     public function __construct(
-        RecipeFactory $recipeFactory,
         ForeignKeysExtractor $extractor,
         RefineExecutor $refineExecutor
     ) {
-        $this->recipeFactory = $recipeFactory;
         $this->extractor = $extractor;
         $this->refineExecutor = $refineExecutor;
     }
@@ -44,6 +40,13 @@ class Refiner
      */
     private function runQueryFor(Schema\ForeignKeyConstraint $foreignKey)
     {
+        echo(sprintf(
+            "    - %s.%s => %s.%s\n",
+            $foreignKey->getLocalTableName(),
+            implode('_', $foreignKey->getLocalColumns()),
+            $foreignKey->getForeignTableName(),
+            implode('_', $foreignKey->getForeignColumns())
+        ));
         if ($this->extractor->isLocalColumnNullable($foreignKey)) {
             $this->refineExecutor->setNulls($foreignKey);
 
@@ -60,20 +63,20 @@ class Refiner
      */
     private function refineTable(string $tabletableName)
     {
+        echo('  - refining '.$tabletableName."\n");
         /** @var Schema\ForeignKeyConstraint $foreignKey */
         foreach ($this->extractor->findForeignKeysReferencingTable($tabletableName) as $foreignKey) {
             $this->runQueryFor($foreignKey);
         }
+
     }
 
     /**
-     * @param string $filename
+     * @param Recipe $recipe
      * @throws Schema\SchemaException
-     * @throws \Doctrine\DBAL\DBALException
      */
-    public function refineBasedOnConfig(string $filename)
+    public function refine(Recipe $recipe)
     {
-        $recipe = $this->recipeFactory->createRecipe($filename);
         /** @var Table $table */
         foreach ($recipe->getTables() as $table) {
             $this->refineIfSubsetted($table);

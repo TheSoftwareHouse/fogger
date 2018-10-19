@@ -2,18 +2,13 @@
 
 namespace App\Fogger\Data;
 
-use App\Fogger\Subset\SubsetStrategyProvider;
-
 class ChunkReader
 {
-    private $query;
+    private $sourceQuery;
 
-    private $subsetStrategyProvider;
-
-    public function __construct(TableQuery $query, SubsetStrategyProvider $subsetStrategyProvider)
+    public function __construct(SourceQuery $sourceQuery)
     {
-        $this->query = $query;
-        $this->subsetStrategyProvider = $subsetStrategyProvider;
+        $this->sourceQuery = $sourceQuery;
     }
 
     /**
@@ -23,12 +18,10 @@ class ChunkReader
      */
     public function getDataChunk(ChunkMessage $chunkMessage): array
     {
-        $query = $this->query->getAllRowsQuery($chunkMessage->getTable());
-        $subsetStrategy = $this->subsetStrategyProvider->getSubsetStrategy($chunkMessage->getStrategyName());
-        $subsetStrategy->subsetQuery($query, $chunkMessage->getTable());
-        $query
-            ->setMaxResults($chunkMessage->getLimit())
-            ->setFirstResult($chunkMessage->getOffset());
+        $query = $this->sourceQuery->getAllRowsQuery(
+            $chunkMessage->getTable(),
+            $chunkMessage->getKeys()
+        );
 
         return $query->execute()->fetchAll();
     }

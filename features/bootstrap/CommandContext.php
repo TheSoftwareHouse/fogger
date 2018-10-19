@@ -57,7 +57,12 @@ class CommandContext implements Context
     {
         $this->runCommand(
             $this->foggerName($name),
-            array_map(function ($item) { return $item === 'true' ? true : $item; }, $table->getRowsHash())
+            array_map(
+                function ($item) {
+                    return $item === 'true' ? true : $item;
+                },
+                $table->getRowsHash()
+            )
         );
     }
 
@@ -100,30 +105,15 @@ class CommandContext implements Context
     }
 
     /**
-     * @Given the task queue is empty
-     */
-    public function theTaskQueueIsEmpty()
-    {
-        $this->runCommand(
-            'rabbitmq:purge',
-            [
-                'name' => 'fogger_data_chunks_test',
-                '--no-confirmation' => true,
-            ]
-        );
-    }
-
-    /**
      * @When worker processes :count task(s)
      * @param int $count
      */
     public function workerProcessTask(int $count)
     {
         $this->runCommand(
-            'rabbitmq:consumer',
+            'fogger:consumer',
             [
                 '--messages' => $count,
-                'name' => 'fogger_data_chunks_test',
             ]
         );
     }

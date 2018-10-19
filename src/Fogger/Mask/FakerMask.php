@@ -21,13 +21,13 @@ final class FakerMask extends AbstractCachedMask
     public function getSubstitution(array $options = []): ?string
     {
         $method = $options['method'] ?? self::DEFAULT_METHOD;
-        $parameters = $options['parameters'] ?? [];
+        $parameters = $options['arguments'] ?? [];
         $result = $this->generator->$method(...$parameters);
 
         if (is_array($result)) {
-            return implode(' ', $result);
-        } else if ($result instanceof \DateTime) {
-            return $result->format("Y-m-d H:i:s");
+            $result = implode(' ', $result);
+        } elseif ($result instanceof \DateTime) {
+            $result = $result->format("Y-m-d H:i:s");
         }
 
         return $result;

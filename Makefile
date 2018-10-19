@@ -15,7 +15,7 @@ install:
 start:
 	${DOCKER_COMPOSE} up -d
 	echo "waiting for services to start..."
-	sleep 30
+	sleep 16
 
 .PHONY: stop
 stop:

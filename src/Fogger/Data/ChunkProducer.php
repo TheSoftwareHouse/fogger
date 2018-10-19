@@ -4,33 +4,22 @@ namespace App\Fogger\Data;
 
 use App\Fogger\Recipe\Recipe;
 use App\Fogger\Recipe\Table;
-use OldSound\RabbitMqBundle\RabbitMq\ProducerInterface;
-use Symfony\Component\Serializer\SerializerInterface;
 
 class ChunkProducer
 {
-    private $rabbitProducer;
+    private $sourceQuery;
 
-    private $chunkDivider;
-
-    private $serializer;
-
-    private $chunkCounter;
+    private $chunkCache;
 
     private $chunkError;
 
     public function __construct(
-        ProducerInterface $rabbitProducer,
-        ChunkDivider $chunkDivider,
-        SerializerInterface $serializer,
-        ChunkCounter $chunkCounter,
+        SourceQuery $sourceQuery,
+        ChunkCache $chunkCache,
         ChunkError $chunkError
-    )
-    {
-        $this->chunkDivider = $chunkDivider;
-        $this->rabbitProducer = $rabbitProducer;
-        $this->serializer = $serializer;
-        $this->chunkCounter = $chunkCounter;
+    ) {
+        $this->sourceQuery = $sourceQuery;
+        $this->chunkCache = $chunkCache;
         $this->chunkError = $chunkError;
     }
 
@@ -40,14 +29,29 @@ class ChunkProducer
      */
     private function queueTableChunks(Table $table)
     {
-        $count = $this->chunkDivider->getNumberOfChunks($table);
 
-        for ($i = 0; $i < $count; $i++) {
-            $this->rabbitProducer->publish(
-                $this->serializer->serialize(new ChunkMessage($table, $i), 'json')
-            );
+        if (null === $table->getSortBy()) {
+            $this->sourceQuery->getAllKeysQuery($table);
+            $this->chunkCache->pushMessage($table);
 
-            $this->chunkCounter->increasePublishedCount();
+            return;
+        }
+
+        $result = $this->sourceQuery->getAllKeysQuery($table)->execute();
+
+        $counter = 0;
+        $keys = [];
+
+        while ($key = $result->fetchColumn()) {
+            $keys[] = $key;
+            $counter++;
+            if (0 === $counter % $table->getChunkSize()) {
+                $this->chunkCache->pushMessage($table, $keys);
+                $keys = [];
+            }
+        }
+        if (0 !== $counter % $table->getChunkSize()) {
+            $this->chunkCache->pushMessage($table, $keys);
         }
     }
 
@@ -57,7 +61,7 @@ class ChunkProducer
      */
     public function run(Recipe $recipe)
     {
-        $this->chunkCounter->reset();
+        $this->chunkCache->reset();
         $this->chunkError->reset();
         foreach ($recipe->getTables() as $table) {
             $this->queueTableChunks($table);

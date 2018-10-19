@@ -1,15 +1,15 @@
 <?php
 
-use App\Fogger\Data\ChunkCounter;
+use App\Fogger\Data\ChunkCache;
 use Behat\Behat\Context\Context;
 
-class ChunkCounterContext implements Context
+class ChunkCacheContext implements Context
 {
-    private $chunkCounter;
+    private $chunkCache;
 
-    public function __construct(ChunkCounter $chunkCounter)
+    public function __construct(ChunkCache $chunkCache)
     {
-        $this->chunkCounter = $chunkCounter;
+        $this->chunkCache = $chunkCache;
     }
 
     /**
@@ -39,7 +39,7 @@ class ChunkCounterContext implements Context
      */
     public function publishedTasksCounterShouldEqual(int $expected)
     {
-        $this->assertCountEquals($this->chunkCounter->getPublishedCount(), $expected);
+        $this->assertCountEquals($this->chunkCache->getPublishedCount(), $expected);
     }
 
     /**
@@ -49,6 +49,14 @@ class ChunkCounterContext implements Context
      */
     public function processedTasksCounterShouldEqual(int $expected)
     {
-        $this->assertCountEquals($this->chunkCounter->getProcessedCount(), $expected);
+        $this->assertCountEquals($this->chunkCache->getProcessedCount(), $expected);
+    }
+
+    /**
+     * @Given the task queue is empty
+     */
+    public function theTaskQueueIsEmpty()
+    {
+        $this->chunkCache->reset();
     }
 }

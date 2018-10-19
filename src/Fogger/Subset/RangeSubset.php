@@ -21,13 +21,14 @@ class RangeSubset extends AbstractSubset
     /**
      * @param QueryBuilder $queryBuilder
      * @param Table $table
+     * @return QueryBuilder
      * @throws Exception\RequiredOptionMissingException
      */
-    public function subsetQuery(QueryBuilder $queryBuilder, Table $table)
+    public function subsetQuery(QueryBuilder $queryBuilder, Table $table): QueryBuilder
     {
         $this->ensureValidOptions($options = $table->getSubset()->getOptions());
 
-        $queryBuilder
+        return $queryBuilder
             ->where(sprintf('%s >= ?', $options['column']))
             ->andWhere(sprintf('%s <= ?', $options['column']))
             ->setParameter(0, $options['from'])

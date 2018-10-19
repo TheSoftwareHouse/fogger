@@ -10,7 +10,7 @@ You can configure various masking and subsetting strategies, and when what *fogg
 
 ## How to use the docker image
 
-*Fogger* requires docker environment, redis and rabbitMq services and two databases: source and target. You can set up this stack using for example this docker-compose file: 
+*Fogger* requires docker environment, redis for caching and two databases: source and target. You can set up this stack using for example this docker-compose file: 
 ```
 version: '2.0'
 services:
@@ -21,24 +21,17 @@ services:
     environment:
       SOURCE_DATABASE_URL: mysql://user:pass@source:3306/source
       TARGET_DATABASE_URL: mysql://user:pass@target:3306/target
-      RABBITMQ_URL: amqp://user:pass@rabbit:5672
       REDIS_URL: redis://redis
   worker:
     image: tshio/fogger:latest
     environment:
       SOURCE_DATABASE_URL: mysql://user:pass@source:3306/source
       TARGET_DATABASE_URL: mysql://user:pass@target:3306/target
-      RABBITMQ_URL: amqp://user:pass@rabbit:5672
       REDIS_URL: redis://redis
     restart: always
-    command: rabbit:consumer --messages=200 fogger_data_chunks
+    command: fogger:consumer --messages=200
   redis:
     image: redis:4
-  rabbit:
-    image: rabbitmq:3
-    environment:
-      RABBITMQ_DEFAULT_USER: user
-      RABBITMQ_DEFAULT_PASS: pass
   source:
     volumes:
     - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql
@@ -109,7 +102,7 @@ For the clarity and readability of the config files, all the tables that will no
 * faker - will use a marvelous [faker](https://github.com/fzaninotto/Faker) library. Pass the `method` of faker that you want to use here as an option. 
 
     `email: { maskStrategy: "faker", options: { method: "safeEmail" }`
-    `date: { maskStrategy: "faker", options: { method: "date", parameters: ["Y::m::d", "2017-12-31 23:59:59"] }`
+    `date: { maskStrategy: "faker", options: { method: "date", arguments: ["Y::m::d", "2017-12-31 23:59:59"] }`
     
 #### Subsetting data
 

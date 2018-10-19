@@ -52,17 +52,13 @@ services:
     tags:
     - { name: 'serializer.normalizer'}
 
-  App\Fogger\Data\ChunkCounter:
+  App\Fogger\Data\ChunkCache:
     arguments:
     - '@snc_redis.default'
 
   App\Fogger\Data\ChunkError:
     arguments:
     - '@snc_redis.default'
-
-  App\Fogger\Data\ChunkProducer:
-    arguments:
-    - '@old_sound_rabbit_mq.fogger_data_chunks_producer'
 
   App\Fogger\Data\Writer\GenericInsertWriter:
     arguments:

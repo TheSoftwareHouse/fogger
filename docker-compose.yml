@@ -3,8 +3,7 @@ services:
   app:
     depends_on:
     - redis
-    - rabbit
-    image: tshio/fogger:latest
+    build: .
     volumes:
     - .:/app
     - ./var/:/fogger
@@ -16,8 +15,7 @@ services:
   worker:
     depends_on:
     - redis
-    - rabbit
-    image: tshio/fogger:latest
+    build: .
     volumes:
     - .:/app
     - ./var/:/fogger
@@ -27,14 +25,9 @@ services:
       RABBITMQ_URL: amqp://user:pass@rabbit:5672
       REDIS_URL: redis://redis
     restart: always
-    command: rabbit:consumer --messages=200 fogger_data_chunks
+    command: fogger:consumer
   redis:
     image: redis:4
-  rabbit:
-    image: rabbitmq:3
-    environment:
-      RABBITMQ_DEFAULT_USER: user
-      RABBITMQ_DEFAULT_PASS: pass
   source:
     environment:
       MYSQL_DATABASE: source

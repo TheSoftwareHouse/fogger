@@ -24,7 +24,7 @@ class RecipeTableFactory
      */
     private function findSortBy(DBAL\Table $table): ?string
     {
-        if ($table->getPrimaryKey() && count($table->getPrimaryKeyColumns())) {
+        if ($table->getPrimaryKey() && 1 === count($table->getPrimaryKeyColumns())) {
             return $table->getPrimaryKeyColumns()[0];
         }
         foreach ($table->getIndexes() as $index) {
@@ -43,8 +43,11 @@ class RecipeTableFactory
      * @return Table
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function createRecipeTable(DBAL\Table $dbalTable, int $chunkSize, Config\TableConfig $tableConfig = null): Table
-    {
+    public function createRecipeTable(
+        DBAL\Table $dbalTable,
+        int $chunkSize,
+        Config\TableConfig $tableConfig = null
+    ): Table {
         if ($tableConfig && $subsetStrategy = $tableConfig->getSubsetStrategy()) {
             $subset = new StrategyDefinition($subsetStrategy, $tableConfig->getSubsetOptions());
         }

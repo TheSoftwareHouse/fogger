@@ -2,43 +2,33 @@
 
 namespace App\Fogger\Data;
 
-use OldSound\RabbitMqBundle\RabbitMq\ConsumerInterface;
-use PhpAmqpLib\Message\AMQPMessage;
-use Symfony\Component\Serializer\SerializerInterface;
-
-class ChunkConsumer implements ConsumerInterface
+class ChunkConsumer
 {
     private $dataCopier;
 
-    private $serializer;
-
-    private $counter;
+    private $cache;
 
     private $error;
 
     public function __construct(
         DataCopier $dataCopier,
-        SerializerInterface $serializer,
-        ChunkCounter $counter,
+        ChunkCache $cache,
         ChunkError $error
 
     ) {
         $this->dataCopier = $dataCopier;
-        $this->serializer = $serializer;
-        $this->counter = $counter;
+        $this->cache = $cache;
         $this->error = $error;
     }
 
-    public function execute(AMQPMessage $msg)
+    public function execute(ChunkMessage $message)
     {
         try {
-            /** @var ChunkMessage $chunkMessage */
-            $chunkMessage = $this->serializer->deserialize($msg->getBody(), ChunkMessage::class, 'json');
-            $this->dataCopier->copyDataChunk($chunkMessage);
+            $this->dataCopier->copyDataChunk($message);
         } catch (\Exception $exception) {
             $this->error->addError($exception->getMessage());
         }
 
-        $this->counter->increaseProcessedCount();
+        $this->cache->increaseProcessedCount();
     }
 }

@@ -3,8 +3,9 @@
 namespace App\Command;
 
 use App\Config\ConfigLoader;
-use App\Fogger\Data\ChunkCounter;
+use App\Fogger\Data\ChunkCache;
 use App\Fogger\Data\ChunkError;
+use App\Fogger\Recipe\RecipeFactory;
 use App\Fogger\Refine\Refiner;
 use App\Fogger\Schema\SchemaManipulator;
 use Symfony\Component\Console\Command\Command;
@@ -17,22 +18,28 @@ class FinishCommand extends Command
 {
     protected $schemaManipulator;
 
-    protected $chunkCounter;
+    protected $chunkCache;
 
     protected $chunkError;
+
+    protected $recipeFactory;
+
+    protected $recipe = null;
 
     private $refiner;
 
     public function __construct(
         SchemaManipulator $schemaManipulator,
         Refiner $refiner,
-        ChunkCounter $chunkCounter,
-        ChunkError $chunkError
+        ChunkCache $chunkCache,
+        ChunkError $chunkError,
+        RecipeFactory $recipeFactory
     ) {
         $this->schemaManipulator = $schemaManipulator;
         $this->refiner = $refiner;
-        $this->chunkCounter = $chunkCounter;
+        $this->chunkCache = $chunkCache;
         $this->chunkError = $chunkError;
+        $this->recipeFactory = $recipeFactory;
 
         parent::__construct();
     }
@@ -56,12 +63,12 @@ class FinishCommand extends Command
         $output->writeln('Fogger finish procedure');
 
         $io = new SymfonyStyle($input, $output);
-        if ($this->chunkCounter->getProcessedCount() < $this->chunkCounter->getPublishedCount()) {
+        if ($this->chunkCache->getProcessedCount() < $this->chunkCache->getPublishedCount()) {
             $this->outputMessage(
                 sprintf(
                     "We are still working on it, please try again later (%d/%d)",
-                    $this->chunkCounter->getProcessedCount(),
-                    $this->chunkCounter->getPublishedCount()
+                    $this->chunkCache->getProcessedCount(),
+                    $this->chunkCache->getPublishedCount()
                 ),
                 $io,
                 'fg=black;bg=yellow'
@@ -77,10 +84,12 @@ class FinishCommand extends Command
         }
 
         try {
+            $output->writeln(' - refining database...');
+            $this->refiner->refine(
+                $this->recipe ?? $this->recipeFactory->createRecipe($input->getOption('file'))
+            );
             $output->writeln(' - recreating indexes...');
             $this->schemaManipulator->recreateIndexes();
-            $output->writeln(' - refining database...');
-            $this->refiner->refineBasedOnConfig($input->getOption('file'));
             $output->writeln(' - recreating foreign keys...');
             $this->schemaManipulator->recreateForeignKeys();
         } catch (\Exception $exception) {

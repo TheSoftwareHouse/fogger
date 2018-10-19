@@ -6,14 +6,16 @@ use App\Fogger\Recipe\Table;
 
 class ChunkMessage
 {
+    const DEFAULT_CHUNK_SIZE = 2000;
+
     private $table;
 
-    private $chunkNumber;
+    private $keys;
 
-    public function __construct(Table $table, int $chunkNumber)
+    public function __construct(Table $table, array $keys)
     {
         $this->table = $table;
-        $this->chunkNumber = $chunkNumber;
+        $this->keys = $keys;
     }
 
     public function getTable(): Table
@@ -21,28 +23,8 @@ class ChunkMessage
         return $this->table;
     }
 
-    public function getLimit(): int
+    public function getKeys(): array
     {
-        return $this->table->getChunkSize();
-    }
-
-    public function getOffset(): int
-    {
-        return $this->getTable()->getChunkSize() * $this->chunkNumber;
-    }
-
-    public function getStrategyName(): string
-    {
-        return $this->table->getSubset()->getName();
-    }
-
-    public function getMasks(): array
-    {
-        return $this->table->getMasks();
-    }
-
-    public function getChunkNumber(): int
-    {
-        return $this->chunkNumber;
+        return $this->keys;
     }
 }

@@ -7,7 +7,6 @@
         "ext-iconv": "*",
         "ext-json": "*",
         "fzaninotto/faker": "^1.8",
-        "php-amqplib/rabbitmq-bundle": "^1.14",
         "predis/predis": "^1.1",
         "snc/redis-bundle": "^2.1",
         "symfony/console": "*",

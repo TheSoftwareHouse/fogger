@@ -31,9 +31,10 @@ class DataCopier
     public function copyDataChunk(ChunkMessage $chunkMessage)
     {
         $data = $this->chunkReader->getDataChunk($chunkMessage);
+        $table = $chunkMessage->getTable();
         $this->chunkWriterProvider->getWriter()->insert(
-            $chunkMessage->getTable()->getName(),
-            $this->masker->applyMasks($data, $chunkMessage->getMasks())
+            $table->getName(),
+            $this->masker->applyMasks($data, $table->getMasks())
         );
     }
 }

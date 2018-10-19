@@ -3,8 +3,9 @@
 namespace App\Command;
 
 use App\Config\ConfigLoader;
-use App\Fogger\Data\ChunkCounter;
+use App\Fogger\Data\ChunkCache;
 use App\Fogger\Data\ChunkError;
+use App\Fogger\Data\ChunkMessage;
 use App\Fogger\Data\ChunkProducer;
 use App\Fogger\Recipe\RecipeFactory;
 use App\Fogger\Refine\Refiner;
@@ -19,21 +20,18 @@ class RunCommand extends FinishCommand
 {
     private $chunkProducer;
 
-    private $recipeFactory;
-
     public function __construct(
         SchemaManipulator $schemaManipulator,
         ChunkProducer $chunkProducer,
         RecipeFactory $recipeFactory,
         Refiner $refiner,
-        ChunkCounter $chunkCounter,
+        ChunkCache $chunkCache,
         ChunkError $chunkError
     ) {
 
         $this->chunkProducer = $chunkProducer;
-        $this->recipeFactory = $recipeFactory;
 
-        parent::__construct($schemaManipulator, $refiner, $chunkCounter, $chunkError);
+        parent::__construct($schemaManipulator, $refiner, $chunkCache, $chunkError, $recipeFactory);
     }
 
     protected function configure()
@@ -51,8 +49,11 @@ class RunCommand extends FinishCommand
                 'chunk-size',
                 'c',
                 InputOption::VALUE_REQUIRED,
-                'Data is moved in chunks. What should be the size of a chunk. Defaults to 1000',
-                1000
+                sprintf(
+                    'Data is moved in chunks. What should be the size of a chunk. Defaults to %d',
+                    ChunkMessage::DEFAULT_CHUNK_SIZE
+                ),
+                ChunkMessage::DEFAULT_CHUNK_SIZE
             )
             ->addOption(
                 'dont-wait',
@@ -65,7 +66,7 @@ class RunCommand extends FinishCommand
 
     private function showProgressBar(OutputInterface $output)
     {
-        $published = $this->chunkCounter->getPublishedCount();
+        $published = $this->chunkCache->getPublishedCount();
 
         $output->writeln('');
         $output->writeln('If you are masking big database, you can stop this process with Cmd/Ctrl + C');
@@ -79,9 +80,9 @@ class RunCommand extends FinishCommand
         $progressBar->start();
 
         do {
-            $processed = $this->chunkCounter->getProcessedCount();
+            $processed = $this->chunkCache->getProcessedCount();
             $progressBar->setProgress($processed);
-            sleep(0.5);
+            usleep(100000);
         } while ($processed < $published);
 
         $progressBar->finish();
@@ -101,9 +102,9 @@ class RunCommand extends FinishCommand
 
         try {
             $this->schemaManipulator->copySchemaDroppingIndexesAndForeignKeys();
-            $recipe = $this->recipeFactory
+            $this->recipe = $this->recipeFactory
                 ->createRecipe($input->getOption('file'), $chunkSize);
-            $this->chunkProducer->run($recipe);
+            $this->chunkProducer->run($this->recipe);
         } catch (\Exception $exception) {
             $this->outputMessage("There has been an error:\n\n".$exception->getMessage(), $io);
 
@@ -123,7 +124,7 @@ EOT
             );
             $output->writeln('');
             $output->writeln(
-                sprintf('<info>%d chunks have been added to queue</info>', $this->chunkCounter->getPublishedCount())
+                sprintf('<info>%d chunks have been added to queue</info>', $this->chunkCache->getPublishedCount())
             );
 
             return 0;

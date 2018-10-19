@@ -11,6 +11,8 @@ doctrine:
         connections:
             source:
                 url: '%env(resolve:SOURCE_DATABASE_URL)%'
+                options:
+                    !php/const PDO::MYSQL_ATTR_USE_BUFFERED_QUERY: 0
             target:
                 options:
                     !php/const PDO::MYSQL_ATTR_LOCAL_INFILE: 1

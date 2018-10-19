@@ -7,7 +7,7 @@ use Doctrine\DBAL\Query\QueryBuilder;
 
 interface SubsetStrategyInterface
 {
-    public function subsetQuery(QueryBuilder $queryBuilder, Table $table);
+    public function subsetQuery(QueryBuilder $queryBuilder, Table $table): QueryBuilder;
 
     public function supports(string $name): bool;
 }

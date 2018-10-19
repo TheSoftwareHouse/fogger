@@ -41,6 +41,12 @@ class SchemaManipulator
     private function recreateIndexesOnTable(DBAL\Table $table)
     {
         foreach ($table->getIndexes() as $index) {
+            echo(sprintf(
+                "  - %s's index %s on %s\n",
+                $table->getName(),
+                $index->getName(),
+                implode(', ', $index->getColumns())
+            ));
             $this->targetSchema->createIndex($index, $table->getName());
         }
         /** @var DBAL\Column $column */
@@ -56,6 +62,13 @@ class SchemaManipulator
     private function recreateForeignKeysOnTable(DBAL\Table $table)
     {
         foreach ($table->getForeignKeys() as $fk) {
+            echo(sprintf(
+                "  - %s.%s => %s.%s\n",
+                $fk->getLocalTableName(),
+                implode('_', $fk->getLocalColumns()),
+                $fk->getForeignTableName(),
+                implode('_', $fk->getForeignColumns())
+            ));
             $this->targetSchema->createForeignKey($fk, $table->getName());
         }
     }

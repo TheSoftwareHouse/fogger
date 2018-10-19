@@ -10,15 +10,16 @@ class TailSubset extends AbstratctHeadOrTailSubset
     /**
      * @param QueryBuilder $queryBuilder
      * @param Table $table
+     * @return QueryBuilder
      * @throws Exception\RequiredOptionMissingException
      * @throws Exception\SortByColumnRequired
      */
-    public function subsetQuery(QueryBuilder $queryBuilder, Table $table)
+    public function subsetQuery(QueryBuilder $queryBuilder, Table $table): QueryBuilder
     {
         $this->ensureOptionIsSet($table->getSubset()->getOptions(), 'length');
-        $this->ensureValidPrimaryKey($table);
+        $this->ensureSortByColumn($table);
 
-        $queryBuilder
+        return $queryBuilder
             ->andWhere(sprintf('%s >= ?', $table->getSortBy()))
             ->setParameter(0, $this->findOffsetId($table, true));
     }

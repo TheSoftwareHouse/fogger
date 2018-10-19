@@ -3,6 +3,7 @@
 namespace App\Fogger\Recipe;
 
 use App\Config\ConfigLoader;
+use App\Fogger\Data\ChunkMessage;
 use Doctrine\DBAL\Connection;
 
 class RecipeFactory
@@ -20,8 +21,7 @@ class RecipeFactory
         Connection $connection,
         RecipeTableFactory $recipeTableFactory,
         MaskReplicator $maskReplicator
-    )
-    {
+    ) {
         $this->configLoader = $configLoader;
         $this->sourceSchema = $connection->getSchemaManager();
         $this->recipeTableFactory = $recipeTableFactory;
@@ -30,11 +30,11 @@ class RecipeFactory
 
     /**
      * @param string $configFilename
-     * @param int $configChangSize
+     * @param int $chunkSize
      * @return Recipe
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function createRecipe(string $configFilename, int $configChangSize = 1000)
+    public function createRecipe(string $configFilename, int $chunkSize = ChunkMessage::DEFAULT_CHUNK_SIZE)
     {
         $config = $this->configLoader->load($configFilename);
         $recipe = new Recipe($config->getExcludes());
@@ -44,7 +44,7 @@ class RecipeFactory
             if (!in_array($tableName, $config->getExcludes())) {
                 $recipe->addTable(
                     $tableName,
-                    $this->recipeTableFactory->createRecipeTable($dbalTable, $configChangSize, $config->getTable($tableName))
+                    $this->recipeTableFactory->createRecipeTable($dbalTable, $chunkSize, $config->getTable($tableName))
                 );
             }
         }
