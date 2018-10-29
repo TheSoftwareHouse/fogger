@@ -1,6 +1,7 @@
 {
     "name": "thesoftwarehouse/fogger",
     "description": "GDPR friendly database masker",
+    "type": "project",
     "license": "MIT",
     "require": {
         "php": "^7.1.3",
