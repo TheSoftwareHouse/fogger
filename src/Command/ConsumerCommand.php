@@ -71,5 +71,7 @@ class ConsumerCommand extends Command
         $progressBar->finish();
 
         $output->writeln('');
+        
+        return 0;
     }
 }
