@@ -18,6 +18,28 @@ class SchemaManipulator
     }
 
     /**
+     * @return bool
+     */
+    public function isTargetSchemaEmpty()
+    {
+        return empty($this->targetSchema->listTableNames());
+    }
+
+    public function dropTargetSchema()
+    {
+        /** @var DBAL\Table[] $tables */
+        $tables = $this->targetSchema->listTables();
+        foreach ($tables as $table) {
+            foreach ($table->getForeignKeys() as $fk) {
+                $this->targetSchema->dropForeignKey($fk->getName(), $table->getName());
+            }
+        }
+        foreach ($tables as $table) {
+            $this->targetSchema->dropTable($table);
+        }
+    }
+
+    /**
      * @throws DBAL\SchemaException
      */
     public function copySchemaDroppingIndexesAndForeignKeys()
