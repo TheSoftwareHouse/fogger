@@ -10,6 +10,7 @@
         "ext-json": "*",
         "fzaninotto/faker": "^1.8",
         "predis/predis": "^1.1",
+        "ramsey/uuid-doctrine": "^1.5",
         "snc/redis-bundle": "^2.1",
         "symfony/console": "*",
         "symfony/flex": "^1.1",
