@@ -50,7 +50,12 @@ class DataCopier
             $array = json_decode(json_encode($document), true);
             foreach ($message->getCollection()->getMasks() as $path => $maskDefinition) {
                 try {
-                    $array = $this->mask($array, $path, $this->maskProvider->getMask($maskDefinition->getName()));
+                    $array = $this->mask(
+                        $array,
+                        $path,
+                        $this->maskProvider->getMask($maskDefinition->getName()),
+                        $maskDefinition->getOptions()
+                    );
                 } catch (UnknownMaskException $e) {
                 }
             }
@@ -60,7 +65,7 @@ class DataCopier
         $targetCollection->insertMany($masked);
     }
 
-    private function mask(array $document, string $path, MaskStrategyInterface $mask): array
+    private function mask(array $document, string $path, MaskStrategyInterface $mask, $options = []): array
     {
         try {
             $rootObject = new JsonObject($document, true);
@@ -73,7 +78,7 @@ class DataCopier
         }
         foreach ($objs as $obj) {
             $currValue = $obj->get('$');
-            $obj->set('$', $mask->apply($currValue));
+            $obj->set('$', $mask->apply($currValue, $options));
         }
 
         return $rootObject->getValue();

@@ -10,82 +10,68 @@ You can configure various masking and subsetting strategies, and when what *fogg
 
 ## How to use the docker image
 
-*Fogger* requires docker environment, redis for caching and two databases: source and target. You can set up this stack using for example this docker-compose file: 
+*Fogger* requires docker environment, redis for caching and two databases: source and target. 
+
+Start with building the image youself `docker build . -t mongo-fogger  . `
+
+You can then set up a stack using this docker-compose file:
+ 
 ```
 version: '2.0'
 services:
   fogger:
-    image: tshio/fogger:latest
+    image: mongo-fogger
     volumes:
     - .:/fogger
     environment:
-      SOURCE_DATABASE_URL: mysql://user:pass@source:3306/source
-      TARGET_DATABASE_URL: mysql://user:pass@target:3306/target
-      REDIS_URL: redis://redis
+      REDIS_URI: redis://redis
+      MONGO_URI: mongodb://root:example@mongo:27017
   worker:
     image: tshio/fogger:latest
     environment:
-      SOURCE_DATABASE_URL: mysql://user:pass@source:3306/source
-      TARGET_DATABASE_URL: mysql://user:pass@target:3306/target
-      REDIS_URL: redis://redis
+      REDIS_URI: redis://redis
+      MONGO_URI: mongodb://root:example@mongo:27017
     restart: always
     command: fogger:consumer --messages=200
   redis:
     image: redis:4
-  source:
-    volumes:
-    - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql
+  gui:
+    image: mongo-express
+    ports:
+      - 8081:8081
     environment:
-      MYSQL_DATABASE: source
-      MYSQL_PASSWORD: pass
-      MYSQL_ROOT_PASSWORD: pass
-      MYSQL_USER: user
-    image: mysql:5.7
-  target:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+  mongo:
+    image: mongo
+    restart: always
     environment:
-      MYSQL_DATABASE: target
-      MYSQL_PASSWORD: pass
-      MYSQL_ROOT_PASSWORD: pass
-      MYSQL_USER: user
-    image: mysql:5.7
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
 ```
 Note: 
   - we are mapping volume to fogger's and worker's `/fogger` directory - so the config file would be accesible both in container and in our host filesystem
-  - we are importing database content from `dump.sql`
+  - we are using here empty mongo instance and a mongo-express gui
+  - the above mongo images should be removed and real instance should be refered in env variables
      
-Of course you can modify and adjust the settings to your needs - for example - instead of importing database from dump file you can pass the existing database url to `fogger` and `worker` containers in the env variables.
+Now we can spin up the set-up by `docker-compose up -d`. If you have the resources and want to speed up the process you can spawn additional workers executing `docker-compose up -d --scale=worker=4` instead. Give it few seconds for the services to spin up then you can start with *Fogger*:
 
-Now we can spin up the set-up by `docker-compose up -d`. If the database is huge and you want to speed up the process you can spawn additional workers executing `docker-compose up -d --scale=worker=4` instead. Give it few seconds for the services to spin up then you can start with *Fogger*:
-
-*Fogger* gives you three CLI commands:
-
-* `docker-compose run --rm fogger fogger:init` will connect to your source database and prepare a boilerplate configuration file with the information on tables and columns in your database. This configuration file is a place where you define witch column should be masked (and how) and witch tables should be subsetted. See [example config file](Example config file).
-* `docker-compose run --rm fogger fogger:run` is the core command that will orchestrate the copying, masking and subsetting of data. The actual copying will be done by background worker that can scale horizontally. Before `run` is executed make sure that the config file has been modified to your needs. Available subset and mask strategies has been described below. 
-* `docker-compose run --rm fogger fogger:finish` will recreate indexes, refine database so that all the foreign key constraints are still valid, and then recreate them as well. This command runs automatically after run so you need to execute it only when you have stopped the `run` command with `ctrl-c`.
-* it's done - the masked and subsetted data are in a target database. You can do whatever you please with it. For example: `docker-compose exec target /usr/bin/mysqldump -u user --password=pass target > target.sql` will save the dump of masked database in your filesystem.           
+* `docker-compose run --rm fogger fogger:mongo:run` will read the config file, connect to your source database and start preparing chunk information for the workers. See [example config file](Example config file).
+* `docker-compose run --rm fogger fogger:mongo:books` is an additional command that will populate your mongo server, test database, books collection with example documents to play with before you start with real data. 
 
 ### Example config file
 
 ```
-tables:
-  posts:
-    columns:
-      title: { maskStrategy: starify, options: { length: 12 } }
-      body: { maskStrategy: faker, options: { method: "sentences" } }
-    subsetStrategy: tail
-    subsetOptions: { length: 1000 }
-  comments:
-    columns:
-      comment: { maskStrategy: faker, options: { method: "sentences" } }
-  users:
-    columns:
-      email: { maskStrategy: faker, options: { method: "safeEmail" } }
-excludes:
-    - logs
+source: test
+target: target
+collections:
+    books:
+        paths:
+            '$.authors[*].firstName': { maskStrategy: faker, options: { method: firstName } }
+            '$.review': { maskStrategy: faker, options: { method: realText, arguments: [ 50 ] } }
 ```
-This is an example of config file. The boilerplate based on your database schema will be generated for you by `fogger:init`, all you have to do is fill in the mask strategies on the columns that you want masked and subset strategies on the tables for witch you only want fraction of the rows. 
-
-For the clarity and readability of the config files, all the tables that will not be changed can be omitted. They will be copied as they are. Similarly you can omit columns that are not to be masked. Tables from the `excludes` section will exist in the target database, but will be empty. 
+This is an example of config file. 
 
 ### List of available strategies
 
@@ -97,43 +83,13 @@ For the clarity and readability of the config files, all the tables that will no
 
 * starify - will save the 10 stars instead of data - you can pass optional argument: `length` to override default 10
     
-    `email: { maskStrategy: "starify", options: { }`
+    `email: { maskStrategy: "starify" }`
 
 * faker - will use a marvelous [faker](https://github.com/fzaninotto/Faker) library. Pass the `method` of faker that you want to use here as an option. 
 
-    `email: { maskStrategy: "faker", options: { method: "safeEmail" }`
-    `date: { maskStrategy: "faker", options: { method: "date", arguments: ["Y::m::d", "2017-12-31 23:59:59"] }`
+    `email: { maskStrategy: "faker", options: { method: "safeEmail" } }`
+    `date: { maskStrategy: "faker", options: { method: "date", arguments: ["Y::m::d", "2017-12-31 23:59:59"] } }`
     
-#### Subsetting data
-
-* range - only copy those rows, where `column` is between `min` and `max`
-```
-subsetStrategy: range
-subsetOptions: { column: "craetedAt", min: "2018-01-01 00:00", max: "2018-01-31 23:59:59" }
-```
-
-* head and tail - only copy `length` first / last rows
-```
-subsetStrategy: head
-subsetOptions: { length: 1000 }
-```
-or
-```
-subsetStrategy: tail
-subsetOptions: { length: 1000 }
-```
-
-### Under the hood
-
-If you are interested what really happens: 
-
-* source database schema without indices and foreign keys is copied to target
-* data is divided into chunks (this includes query modification for subsetting). Chunks are processedby background workers (using RabbitMQ) 
-* during copying sensitive data is substituted for masked version - in order to keep the substituted values consistent, redis is used as a cache
-* when all data is copied, *fogger* will recreate indices 
-* refining cleans up database removing (or setting to null) relations that point to excluded or subsetted table rows
-* the last step is to recreate foreign keys 
-
 ## Contributing
 
 Feel free to contribute to this project! Just fork the code, make any updates and let us know!
