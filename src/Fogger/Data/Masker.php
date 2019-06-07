@@ -2,6 +2,7 @@
 
 namespace App\Fogger\Data;
 
+use App\Fogger\Mask\MaskStrategyInterface;
 use App\Fogger\Mask\MaskStrategyProvider;
 use App\Fogger\Recipe\StrategyDefinition;
 
@@ -22,9 +23,14 @@ class Masker
      */
     public function applyMasks(array $data, array $masks): array
     {
+        /**
+         * @var  $column
+         * @var StrategyDefinition $definition
+         */
         foreach ($masks as $column => $definition) {
             $data = $this->maskData($data, $column, $definition);
         }
+
 
         return $data;
     }

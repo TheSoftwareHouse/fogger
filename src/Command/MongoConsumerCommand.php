@@ -3,34 +3,34 @@
 namespace App\Command;
 
 use App\Config\ConfigLoader;
-use App\Fogger\Data\ChunkCache;
-use App\Fogger\Data\ChunkConsumer;
-use App\Fogger\Data\ChunkMessage;
+use App\Fogger\Data\Mongo\ChunkCache;
+use App\Fogger\Data\Mongo\ChunkConsumer;
+use App\Fogger\Data\Mongo\ChunkMessage;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class ConsumerCommand extends Command
+class MongoConsumerCommand extends Command
 {
+    private $configLoader;
+
     private $chunkCache;
 
     private $chunkConsumer;
 
-    public function __construct(
-        ChunkCache $chunkCache,
-        ChunkConsumer $chunkConsumer
-    ) {
+    public function __construct(ConfigLoader $configLoader, ChunkCache $chunkCache, ChunkConsumer $chunkConsumer)
+    {
+        $this->configLoader = $configLoader;
         $this->chunkCache = $chunkCache;
         $this->chunkConsumer = $chunkConsumer;
-
         parent::__construct();
     }
 
     protected function configure()
     {
         $this
-            ->setName('fogger:consumer')
+            ->setName('fogger:mongo:consumer')
             ->addOption(
                 'file',
                 'f',
@@ -43,7 +43,7 @@ class ConsumerCommand extends Command
                 'm',
                 InputOption::VALUE_REQUIRED,
                 'How many messages to process.',
-                200
+                1000
             )
             ->setDescription('Consumes a message');
     }

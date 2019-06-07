@@ -1,6 +1,6 @@
 version: '2.0'
 services:
-  app:
+  fogger:
     depends_on:
     - redis
     build: .
@@ -8,10 +8,8 @@ services:
     - .:/app
     - ./var/:/fogger
     environment:
-      SOURCE_DATABASE_URL: mysql://user:pass@source:3306/source
-      TARGET_DATABASE_URL: mysql://user:pass@target:3306/target
-      RABBITMQ_URL: amqp://user:pass@rabbit:5672
-      REDIS_URL: redis://redis
+      REDIS_URI: redis://redis
+      MONGO_URI: mongodb://root:example@mongo:27017
   worker:
     depends_on:
     - redis
@@ -19,26 +17,24 @@ services:
     volumes:
     - .:/app
     - ./var/:/fogger
-    environment:
-      SOURCE_DATABASE_URL: mysql://user:pass@source:3306/source
-      TARGET_DATABASE_URL: mysql://user:pass@target:3306/target
-      RABBITMQ_URL: amqp://user:pass@rabbit:5672
-      REDIS_URL: redis://redis
     restart: always
-    command: fogger:consumer
+    command: fogger:mongo:consumer
+    environment:
+      REDIS_URI: redis://redis
+      MONGO_URI: mongodb://root:example@mongo:27017
   redis:
     image: redis:4
-  source:
+  gui:
+    image: mongo-express
+    ports:
+      - 8081:8081
     environment:
-      MYSQL_DATABASE: source
-      MYSQL_PASSWORD: pass
-      MYSQL_ROOT_PASSWORD: pass
-      MYSQL_USER: user
-    image: mysql:5.7
-  target:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+  mongo:
+    image: mongo
+    restart: always
     environment:
-      MYSQL_DATABASE: target
-      MYSQL_PASSWORD: pass
-      MYSQL_ROOT_PASSWORD: pass
-      MYSQL_USER: user
-    image: mysql:5.7
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example

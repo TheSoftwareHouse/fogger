@@ -3,41 +3,36 @@
 namespace App\Command;
 
 use App\Config\ConfigLoader;
-use App\Fogger\Data\ChunkCache;
-use App\Fogger\Data\ChunkError;
-use App\Fogger\Data\ChunkMessage;
-use App\Fogger\Data\ChunkProducer;
-use App\Fogger\Recipe\RecipeFactory;
-use App\Fogger\Refine\Refiner;
-use App\Fogger\Schema\SchemaManipulator;
+use App\Fogger\Data\Mongo\ChunkCache;
+use App\Fogger\Data\Mongo\ChunkMessage;
+use App\Fogger\Data\Mongo\ChunkProducer;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-class RunCommand extends FinishCommand
+class MongoRunCommand extends Command
 {
+    private $configLoader;
+
     private $chunkProducer;
 
-    public function __construct(
-        SchemaManipulator $schemaManipulator,
-        ChunkProducer $chunkProducer,
-        RecipeFactory $recipeFactory,
-        Refiner $refiner,
-        ChunkCache $chunkCache,
-        ChunkError $chunkError
-    ) {
+    private $chunkCache;
 
-        $this->chunkProducer = $chunkProducer;
-
-        parent::__construct($schemaManipulator, $refiner, $chunkCache, $chunkError, $recipeFactory);
+    public function __construct(ConfigLoader $loader, ChunkProducer $producer, ChunkCache $chunkCache)
+    {
+        $this->configLoader = $loader;
+        $this->chunkProducer = $producer;
+        $this->chunkCache = $chunkCache;
+        parent::__construct();
     }
 
     protected function configure()
     {
         $this
-            ->setName('fogger:run')
+            ->setName('fogger:mongo:run')
             ->addOption(
                 'file',
                 'f',
@@ -62,6 +57,7 @@ class RunCommand extends FinishCommand
                 'With this option command will not wait for the workers to finish.'
             )
             ->setDescription('Starts the process of moving data from source to target database. ');
+
     }
 
     private function showProgressBar(OutputInterface $output)
@@ -69,12 +65,10 @@ class RunCommand extends FinishCommand
         $published = $this->chunkCache->getPublishedCount();
 
         $output->writeln('');
-        $output->writeln('If you are masking big database, you can stop this process with Cmd/Ctrl + C');
-        $output->writeln('Moving data will continue in the background - but in that case, you must manually');
-        $output->writeln('invoke the fogger:finish command to recreate indexes and foreign keys');
+        $output->writeln("Data has been divided into chunks. Fogger is copying data to target database");
         $output->writeln('');
 
-        $output->writeln('Moving data in chunks:');
+        $output->writeln('Progess [number of chunks]:');
 
         $progressBar = new ProgressBar($output, $published);
         $progressBar->start();
@@ -93,33 +87,20 @@ class RunCommand extends FinishCommand
         $io = new SymfonyStyle($input, $output);
         $output->writeln('Fogger run.');
 
-        $chunkSize = (int)$input->getOption('chunk-size');
-        if ($chunkSize < 1) {
-            $this->outputMessage("There has been an error:\n\nChunk size should be greater than 0", $io);
-
-            return -1;
-        }
-
         try {
-            $this->schemaManipulator->copySchemaDroppingIndexesAndForeignKeys();
-            $this->recipe = $this->recipeFactory
-                ->createRecipe($input->getOption('file'), $chunkSize);
-            $this->chunkProducer->run($this->recipe);
+            $this->chunkProducer->run($this->configLoader->load($input->getOption('file')));
         } catch (\Exception $exception) {
-            $this->outputMessage("There has been an error:\n\n".$exception->getMessage(), $io);
+            $io->error("There has been an error:\n\n".$exception->getMessage());
 
             return -1;
         }
-
         if ($input->getOption('dont-wait')) {
 
             $output->writeln('');
             $output->writeln(
                 <<<EOT
 <comment>With dont-wait option the command will only queue data chunks to be processed by the rabbit 
-worker command. Worker runs in background unless you started docker-composer with --scale=worker=0. 
-In order to recreate indexes and foreign keys you will need to manually execute the fogger:finish
-command after the workers</comment>
+worker command. Worker runs in background unless you started docker-composer with --scale=worker=0. </comment>
 EOT
             );
             $output->writeln('');
@@ -133,8 +114,6 @@ EOT
         $this->showProgressBar($output);
         $output->writeln('');
         $output->writeln('');
-
-        parent::execute($input, $output);
 
         return 0;
     }

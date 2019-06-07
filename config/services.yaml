@@ -40,6 +40,9 @@ services:
   # add more service definitions when explicit configuration is needed
   # please note that last definitions always *replace* previous ones
 
+  MongoDB\Client:
+    arguments:
+      - "%env(MONGO_URI)%"
   App\Config\Serializer\ConfigDenormalizer:
     calls:
     - [setDenormalizer, ['@serializer']]
@@ -52,7 +55,23 @@ services:
     tags:
     - { name: 'serializer.normalizer'}
 
+  App\Config\Serializer\Mongo\ConfigDenormalizer:
+    calls:
+    - [setDenormalizer, ['@serializer']]
+    tags:
+    - { name: 'serializer.normalizer'}
+
+  App\Config\Serializer\Mongo\CollectionDenormalizer:
+    calls:
+    - [setDenormalizer, ['@serializer']]
+    tags:
+    - { name: 'serializer.normalizer'}
+
   App\Fogger\Data\ChunkCache:
+    arguments:
+    - '@snc_redis.default'
+
+  App\Fogger\Data\Mongo\ChunkCache:
     arguments:
     - '@snc_redis.default'
 
@@ -89,6 +108,12 @@ services:
     - "@doctrine.dbal.target_connection"
 
   App\Fogger\Serializer\TableDenormalizer:
+    calls:
+    - [setDenormalizer, ['@serializer']]
+    tags:
+    - { name: 'serializer.normalizer'}
+
+  App\Fogger\Serializer\CollectionDenormalizer:
     calls:
     - [setDenormalizer, ['@serializer']]
     tags:

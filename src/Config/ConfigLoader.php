@@ -2,7 +2,7 @@
 
 namespace App\Config;
 
-use App\Config\Model\Config;
+use App\Config\Model\Mongo\Config;
 use Symfony\Component\Serializer\Encoder\YamlEncoder;
 use Symfony\Component\Serializer\SerializerInterface;
 
