@@ -49,10 +49,14 @@ abstract class AbstractCachedMask extends AbstractMask
             $originalValueCacheItem->set(self::LOCK_VALUE);
             $this->cache->save($originalValueCacheItem);
         }
-
+        $tries = 0;
         do {
+            $tries++;
             $substitution = $this->getSubstitution($options);
             $substitutionCacheItem = $this->cache->getItem($this->forgeCacheKey($substitution, $options, true));
+            if ($tries == 100) {
+                break;
+            }
         } while ($substitutionCacheItem->isHit());
         $this->cache->save($substitutionCacheItem);
 
