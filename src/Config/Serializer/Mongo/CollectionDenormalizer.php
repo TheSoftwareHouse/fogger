@@ -24,7 +24,7 @@ class CollectionDenormalizer implements DenormalizerInterface
 
     public function denormalize($data, $class, $format = null, array $context = array())
     {
-        $collection = new CollectionConfig();
+        $collection = new CollectionConfig($data['limit'] ?? 0);
         foreach ($data['paths'] ?? [] as $key => $path) {
             /** @var PathConfig $pathConfig */
             $pathConfig = $this->denormalizer->denormalize($path, PathConfig::class, $format, $context);

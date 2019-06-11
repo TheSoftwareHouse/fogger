@@ -18,7 +18,12 @@ class ConfigDenormalizer implements DenormalizerInterface
 
     public function denormalize($data, $class, $format = null, array $context = array())
     {
-        $config = new Config($data['source'] ?? 'source', $data['target'] ?? 'target');
+        $config = new Config(
+            $data['source'] ?? 'source',
+            $data['target'] ?? 'target',
+            $data['chunkSize'] ?? 100,
+            $data['suffix'] ?? ''
+        );
 
         foreach ($data['collections'] ?? [] as $key => $collection) {
             /** @var CollectionConfig $collectionConfig */

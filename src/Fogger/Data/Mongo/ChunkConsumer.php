@@ -29,6 +29,7 @@ class ChunkConsumer
             $this->dataCopier->copyDataChunk($message);
         } catch (\Exception $exception) {
             $this->error->addError($exception->getMessage());
+            echo($exception->getMessage());
         } finally {
             $this->cache->increaseProcessedCount();
         }

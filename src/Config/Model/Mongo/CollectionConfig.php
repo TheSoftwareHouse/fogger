@@ -6,6 +6,13 @@ class CollectionConfig
 {
     private $paths = [];
 
+    private $limit;
+
+    public function __construct(int $limit)
+    {
+        $this->limit = $limit;
+    }
+
     /**
      * @return PathConfig[]|array
      */
@@ -17,5 +24,10 @@ class CollectionConfig
     public function addPath(string $path, PathConfig $pathConfig): void
     {
         $this->paths[$path] = $pathConfig;
+    }
+
+    public function getLimit(): int
+    {
+        return $this->limit;
     }
 }

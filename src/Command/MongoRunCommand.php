@@ -68,7 +68,7 @@ class MongoRunCommand extends Command
         $output->writeln("Data has been divided into chunks. Fogger is copying data to target database");
         $output->writeln('');
 
-        $output->writeln('Progess [number of chunks]:');
+        $output->writeln('Progress [number of chunks]:');
 
         $progressBar = new ProgressBar($output, $published);
         $progressBar->start();

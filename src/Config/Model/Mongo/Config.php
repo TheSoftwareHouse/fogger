@@ -8,12 +8,18 @@ class Config
 
     private $target;
 
+    private $suffix;
+
+    private $chunkSize;
+
     private $collections = [];
 
-    public function __construct(string $source, string $target)
+    public function __construct(string $source, string $target, int $chunkSize = 100, string $suffix = '')
     {
         $this->source = $source;
         $this->target = $target;
+        $this->chunkSize = $chunkSize;
+        $this->suffix = $suffix;
     }
 
     public function getSource(): string
@@ -24,6 +30,16 @@ class Config
     public function getTarget(): string
     {
         return $this->target;
+    }
+
+    public function getChunkSize(): int
+    {
+        return $this->chunkSize;
+    }
+
+    public function getSuffix(): string
+    {
+        return $this->suffix;
     }
 
     public function addCollection(string $name, CollectionConfig $collectionConfig): void

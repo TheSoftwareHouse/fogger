@@ -3,11 +3,8 @@
 namespace App\Command;
 
 use App\Config\ConfigLoader;
-use App\Fogger\Data\Mongo\ChunkCache;
-use App\Fogger\Data\Mongo\ChunkProducer;
 use Faker\Factory;
 use MongoDB\Client;
-use MongoDB\Collection;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -17,15 +14,12 @@ class BooksCommand extends Command
 {
     private $configLoader;
 
-    private $chunkProducer;
+    private $client;
 
-    private $chunkCache;
-
-    public function __construct(ConfigLoader $loader, ChunkProducer $producer, ChunkCache $chunkCache)
+    public function __construct(ConfigLoader $loader, Client $client)
     {
         $this->configLoader = $loader;
-        $this->chunkProducer = $producer;
-        $this->chunkCache = $chunkCache;
+        $this->client = $client;
         parent::__construct();
     }
 
@@ -47,7 +41,7 @@ class BooksCommand extends Command
     {
         $output->writeln(
             sprintf(
-                "Populating mongo's test:books with %s example documents",
+                "Populating mongo's books collection with %s example documents",
                 $input->getOption('count')
             )
         );
@@ -56,22 +50,16 @@ class BooksCommand extends Command
         return 0;
     }
 
-    private function collection(): Collection
-    {
-        $client = new Client("mongodb://root:example@mongo:27017");
-        $db = 'test';
-        $collection = 'books';
-
-        return $client->$db->$collection;
-    }
-
     private function putSomeDocuments(InputInterface $input)
     {
-        $collection = $this->collection();
+        $config = $this->configLoader->load(ConfigLoader::DEFAULT_FILENAME);
+        $db = $config->getTarget();
+        $collection = $this->client->$db->books;
         $faker = Factory::create();
         foreach (range(1, $input->getOption('count')) as $i) {
             $collection->insertOne(
                 [
+                    '_id' => uniqid(),
                     'authors' => [
                         ['firstName' => $faker->firstName, 'lastName' => $faker->lastName, 'born' => $faker->date],
                         ['firstName' => $faker->firstName, 'lastName' => $faker->lastName, 'born' => $faker->date()],

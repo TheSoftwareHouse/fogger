@@ -12,14 +12,17 @@ class ChunkMessage
 
     private $target;
 
+    private $suffix;
+
     private $collection;
 
     private $keys;
 
-    public function __construct(string $source, string $target, Collection $collection, array $keys)
+    public function __construct(string $source, string $target, string $suffix, Collection $collection, array $keys)
     {
         $this->source = $source;
         $this->target = $target;
+        $this->suffix = $suffix;
         $this->collection = $collection;
         $this->keys = $keys;
     }
@@ -32,6 +35,11 @@ class ChunkMessage
     public function getTarget(): string
     {
         return $this->target;
+    }
+
+    public function getSuffix(): string
+    {
+        return $this->suffix;
     }
 
     public function getCollection(): Collection

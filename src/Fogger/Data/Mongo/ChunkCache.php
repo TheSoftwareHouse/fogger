@@ -33,9 +33,9 @@ class ChunkCache
         );
     }
 
-    public function pushMessage(string $source, string $target, Collection $collection, array $keys = [])
+    public function pushMessage(string $source, string $target, string $suffix, Collection $collection, array $keys = [])
     {
-        $message = $this->serializer->serialize(new ChunkMessage($source, $target, $collection, $keys), 'json');
+        $message = $this->serializer->serialize(new ChunkMessage($source, $target, $suffix, $collection, $keys), 'json');
         $this->redis->rpush(self::LIST_NAME, [$message]);
         $this->increasePublishedCount();
     }

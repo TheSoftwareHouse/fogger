@@ -12,13 +12,13 @@ use MongoDB\Model\BSONDocument;
 
 class ChunkProducer
 {
-    const CHUNK_SIZE = 1000;
-
     private $client;
 
     private $source;
 
     private $target;
+
+    private $suffix;
 
     private $chunkCache;
 
@@ -31,7 +31,7 @@ class ChunkProducer
         $this->chunkError = $chunkError;
     }
 
-    private function queueCollectionChunks(string $collectionName, CollectionConfig $collectionConfig)
+    private function queueCollectionChunks(string $collectionName, CollectionConfig $collectionConfig, int $chunkSize)
     {
         $recipe = new Collection($collectionName);
         foreach ($collectionConfig->getPaths() as $path => $definition) {
@@ -44,7 +44,11 @@ class ChunkProducer
         $source = $this->source;
 
         $collection = $this->client->$source->$collectionName;
-        $cursor = $collection->find([], ['projection' => ['_id' => 1]]);
+        $options = ['projection' => ['_id' => 1]];
+        if ($collectionConfig->getLimit() > 0) {
+            $options['limit'] = $collectionConfig->getLimit();
+        }
+        $cursor = $collection->find([], $options);
 
         $counter = 0;
         $keys = [];
@@ -55,14 +59,14 @@ class ChunkProducer
             $document->getArrayCopy();
             $keys[] = (string)$arrayCopy['_id'];
             $counter++;
-            if (0 === $counter % self::CHUNK_SIZE) {
-                $this->chunkCache->pushMessage($this->source, $this->target, $recipe, $keys);
+            if (0 === $counter % $chunkSize) {
+                $this->chunkCache->pushMessage($this->source, $this->target, $this->suffix, $recipe, $keys);
                 $keys = [];
             }
         }
 
-        if (0 !== $counter % self::CHUNK_SIZE) {
-            $this->chunkCache->pushMessage($this->source, $this->target, $recipe, $keys);
+        if (0 !== $counter % $chunkSize) {
+            $this->chunkCache->pushMessage($this->source, $this->target, $this->suffix, $recipe, $keys);
         }
     }
 
@@ -72,9 +76,10 @@ class ChunkProducer
         $this->chunkError->reset();
         $this->source = $config->getSource();
         $this->target = $config->getTarget();
+        $this->suffix = $config->getSuffix();
         /** @var CollectionConfig $collection */
         foreach ($config->getCollections() as $name => $collection) {
-            $this->queueCollectionChunks($name, $collection);
+            $this->queueCollectionChunks($name, $collection, $config->getChunkSize());
         }
     }
 }
