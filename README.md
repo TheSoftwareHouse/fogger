@@ -58,6 +58,7 @@ Note:
 Now we can spin up the set-up by `docker-compose up -d`. If you have the resources and want to speed up the process you can spawn additional workers executing `docker-compose up -d --scale=worker=4` instead. Give it few seconds for the services to spin up then you can start with *Fogger*:
 
 * `docker-compose run --rm fogger fogger:mongo:run` will read the config file, connect to your source database and start preparing chunk information for the workers. See [example config file](Example config file).
+* `docker-compose run --rm fogger fogger:mongo:finish` will create on target collection all the indexes present in source collection. 
 * `docker-compose run --rm fogger fogger:mongo:books` is an additional command that will populate your mongo server, test database, books collection with example documents to play with before you start with real data. 
 
 ### Example config file
