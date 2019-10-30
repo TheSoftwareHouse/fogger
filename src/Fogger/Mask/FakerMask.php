@@ -21,8 +21,17 @@ final class FakerMask extends AbstractCachedMask
     public function getSubstitution(array $options = []): ?string
     {
         $method = $options['method'] ?? self::DEFAULT_METHOD;
-        $parameters = $options['arguments'] ?? [];
-        $result = $this->generator->$method(...$parameters);
+        $arguments = $options['arguments'] ?? [];
+        $modifier = $options['modifier'] ?? null;
+        $modifierArguments = $options['modifierArguments'] ?? [];
+
+        $generator = $this->generator;
+
+        if ('optional' === $modifier) {
+            $generator = $generator->optional(...$modifierArguments);
+        }
+
+        $result = $generator->$method(...$arguments);
 
         if (is_array($result)) {
             $result = implode(' ', $result);
