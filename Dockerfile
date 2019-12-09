@@ -23,12 +23,19 @@ RUN apt-get update \
         libssl-dev \
         openssl \
         nano \
-        wget
+        wget \
+        curl
+
+RUN apt-get install -y curl gnupg2 apt-transport-https && \
+    curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
+    curl https://packages.microsoft.com/config/debian/9/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
+    apt-get -y update && \
+    export ACCEPT_EULA=Y && apt-get -y install msodbcsql17 mssql-tools
 
 RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
     && docker-php-ext-configure pdo_dblib --with-libdir=/lib/x86_64-linux-gnu \
-    && pecl install sqlsrv-4.1.6.1 \
-    && pecl install pdo_sqlsrv-4.1.6.1 \
+    && pecl install sqlsrv \
+    && pecl install pdo_sqlsrv \
     && docker-php-ext-install \
             iconv \
             mbstring \
