@@ -7,6 +7,7 @@ use App\Fogger\Data\ChunkCache;
 use App\Fogger\Data\ChunkConsumer;
 use App\Fogger\Data\ChunkMessage;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -50,17 +51,27 @@ class ConsumerCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        for ($i = 0; $i < $input->getOption('messages'); $i++) {
+        $messagesAmount = (int) $input->getOption('messages');
+
+        $progressBar = new ProgressBar($output, $messagesAmount);
+        $progressBar->start();
+
+        for ($i = 0; $i < $messagesAmount; $i++) {
 
             /** @var ChunkMessage $message */
             $message = $this->chunkCache->popMessage();
 
             if ($message instanceof ChunkMessage) {
                 $this->chunkConsumer->execute($message);
-            } else {
-                echo('.');
-                usleep(500000);
             }
+
+            $progressBar->setProgress($i);
         }
+
+        $progressBar->finish();
+
+        $output->writeln('');
+        
+        return 0;
     }
 }
