@@ -14,6 +14,7 @@ use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 class RunCommand extends FinishCommand
@@ -98,6 +99,17 @@ class RunCommand extends FinishCommand
             $this->outputMessage("There has been an error:\n\nChunk size should be greater than 0", $io);
 
             return -1;
+        }
+
+        if (!$this->schemaManipulator->isTargetSchemaEmpty()) {
+            $io->warning('Target database schema is not empty');
+            $helper = $this->getHelper('question');
+            $question = new ConfirmationQuestion('Drop target database schema? (y/n) ', false);
+            if ($helper->ask($input, $output, $question)) {
+                $io->text('Dropping database schema...');
+                $this->schemaManipulator->dropTargetSchema();
+                $io->success('Target database schema dropped successfully!');
+            }
         }
 
         try {
