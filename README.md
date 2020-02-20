@@ -14,7 +14,7 @@ You can configure various masking and subsetting strategies, and when what *fogg
 ```
 version: '2.0'
 services:
-  fogger:
+  app:
     image: tshio/fogger:latest
     volumes:
     - .:/fogger
@@ -56,6 +56,11 @@ Note:
 Of course you can modify and adjust the settings to your needs - for example - instead of importing database from dump file you can pass the existing database url to `fogger` and `worker` containers in the env variables.
 
 Now we can spin up the set-up by `docker-compose up -d`. If the database is huge and you want to speed up the process you can spawn additional workers executing `docker-compose up -d --scale=worker=4` instead. Give it a few seconds for the services to spin up then you can start with *Fogger*:
+
+To import `dump.sql` to `source` database
+```
+docker-compose exec source sh -c "mysql -u user -p source < docker-entrypoint-initdb.d/dump.sql"
+```
 
 *Fogger* gives you three CLI commands:
 
