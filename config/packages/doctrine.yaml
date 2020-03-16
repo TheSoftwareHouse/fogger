@@ -4,6 +4,12 @@ parameters:
     # environment variables are not available yet.
     # You should not need to change this value.
     env(DATABASE_URL): ''
+    env(CHARSET): 'utf8'
+    env(COLLATE): 'utf8_general_ci'
+    charset: '%env(CHARSET)%'
+    collate: '%env(COLLATE)%'
+    env(MYSQL_ATTR_INIT_COMMAND): "SET NAMES '%charset%' COLLATE '%collate%'"
+
 
 doctrine:
     dbal:
@@ -13,7 +19,13 @@ doctrine:
                 url: '%env(resolve:SOURCE_DATABASE_URL)%'
                 options:
                     !php/const PDO::MYSQL_ATTR_USE_BUFFERED_QUERY: 0
+                    charset: '%env(resolve:CHARSET)%'
+                    collate: '%env(resolve:COLLATE)%'
+                    !php/const PDO::MYSQL_ATTR_INIT_COMMAND: '%env(resolve:MYSQL_ATTR_INIT_COMMAND)%'
             target:
                 options:
                     !php/const PDO::MYSQL_ATTR_LOCAL_INFILE: 1
+                    charset: '%env(resolve:CHARSET)%'
+                    collate: '%env(resolve:COLLATE)%'
+                    !php/const PDO::MYSQL_ATTR_INIT_COMMAND: '%env(resolve:MYSQL_ATTR_INIT_COMMAND)%'
                 url: '%env(resolve:TARGET_DATABASE_URL)%'

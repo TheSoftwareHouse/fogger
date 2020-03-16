@@ -16,5 +16,7 @@ services:
     image: mysql:5.7
   app:
     environment:
+      CHARSET: utf8
+      COLLATE: utf8_general_ci
       SOURCE_DATABASE_URL: mysql://user:pass@mysql_test_source:3306/source
       TARGET_DATABASE_URL: mysql://user:pass@mysql_test_target:3306/target

@@ -9,10 +9,13 @@ class SchemaManipulator
 {
     private $sourceSchema;
 
+    private $sourceConnection;
+
     private $targetSchema;
 
     public function __construct(Connection $source, Connection $target)
     {
+        $this->sourceConnection = $source;
         $this->sourceSchema = $source->getSchemaManager();
         $this->targetSchema = $target->getSchemaManager();
     }
@@ -33,6 +36,12 @@ class SchemaManipulator
             }
             foreach ($table->getIndexes() as $index) {
                 $table->dropIndex($index->getName());
+            }
+            if (!$table->hasOption('collate')) {
+                $table->addOption(
+                    'collate',
+                    $this->sourceConnection->getParams()['driverOptions']['collate']
+                );
             }
             $this->targetSchema->createTable($table);
         }
