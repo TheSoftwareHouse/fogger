@@ -41,14 +41,24 @@ class ChunkProducer
 
         $counter = 0;
         $keys = [];
+        $last_key = null;
 
-        while ($key = $result->fetchColumn()) {
+        while (($key = $result->fetchColumn()) !== False) {
             $keys[] = $key;
             $counter++;
             if (0 === $counter % $table->getChunkSize()) {
+
+                do {
+                    $last_key = $key;
+                    $key = $result->fetchColumn();
+                    $counter++;
+                } while ($last_key === $key);
+
                 $this->chunkCache->pushMessage($table, $keys);
                 $keys = [];
+                $keys[] = $key;
             }
+            $last_key = $key;
         }
         if (0 !== $counter % $table->getChunkSize()) {
             $this->chunkCache->pushMessage($table, $keys);
