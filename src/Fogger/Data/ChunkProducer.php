@@ -36,8 +36,10 @@ class ChunkProducer
 
             return;
         }
-
-        $result = $this->sourceQuery->getAllKeysQuery($table)->execute();
+        
+        $query = $this->sourceQuery->getAllKeysQuery($table);
+        $query = $query->orderBy($table->getSortBy());
+        $result = $query->execute();
 
         $counter = 0;
         $keys = [];
