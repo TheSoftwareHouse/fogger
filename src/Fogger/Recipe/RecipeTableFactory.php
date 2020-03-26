@@ -37,7 +37,11 @@ class RecipeTableFactory
         }
         foreach ($table->getIndexes() as $index) {
             if ($index->isUnique()) {
-                return $index->getColumns()[0];
+                foreach ($index->getColumns() as $column) {
+                    if ($table->getColumn($column)->getNotnull()) {
+                        return $column;
+                    }
+                }
             }
         }
 
