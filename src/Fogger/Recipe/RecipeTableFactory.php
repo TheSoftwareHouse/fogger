@@ -32,6 +32,18 @@ class RecipeTableFactory
                 return $index->getColumns()[0];
             }
         }
+        if ($table->getPrimaryKey()) {
+            return $table->getPrimaryKeyColumns()[0];
+        }
+        foreach ($table->getIndexes() as $index) {
+            if ($index->isUnique()) {
+                foreach ($index->getColumns() as $column) {
+                    if ($table->getColumn($column)->getNotnull()) {
+                        return $column;
+                    }
+                }
+            }
+        }
 
         return null;
     }
