@@ -24,7 +24,7 @@ framework:
 
         # Redis
         app: cache.adapter.redis
-        default_redis_provider: redis://redis
+        default_redis_provider: '%redis_url%'
 
         # APCu (not recommended with heavy random-write workloads as memory fragmentation can cause perf issues)
         #app: cache.adapter.apcu

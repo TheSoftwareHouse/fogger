@@ -6,11 +6,15 @@ parameters:
     env(DATABASE_URL): ''
     env(CHARSET): 'utf8'
     env(COLLATE): 'utf8_general_ci'
+    env(REDIS_URL): 'redis://redis'
+    env(REDIS_MESSAGE_URL): 'redis://redis'
     env(FAKER_LOCALE): 'en_GB'
     charset: '%env(CHARSET)%'
     collate: '%env(COLLATE)%'
     faker_locale: '%env(FAKER_LOCALE)%'
     env(MYSQL_ATTR_INIT_COMMAND): "SET NAMES '%charset%' COLLATE '%collate%'"
+    redis_url: '%env(REDIS_URL)%'
+    redis_message_url: '%env(REDIS_MESSAGE_URL)%'
 
 
 doctrine:
