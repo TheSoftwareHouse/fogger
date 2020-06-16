@@ -35,7 +35,7 @@ abstract class AbstractCachedMask extends AbstractMask
      */
     public function apply(?string $value, array $options = []): ?string
     {
-        if (null === $value) {
+        if ((null === $value) or ("" === $value)) {
             return $value;
         }
 

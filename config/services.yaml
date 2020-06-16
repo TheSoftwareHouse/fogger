@@ -74,11 +74,16 @@ services:
   app.fogger.faker_generator:
     class: Faker\Factory
     factory: ['Faker\Factory', create]
+    arguments: ['%faker_locale%']
 
   App\Fogger\Mask\FakerMask:
     arguments:
     - '@app.fogger.faker_generator'
-
+  
+  App\Fogger\Mask\FakerUnstoredMask:
+    arguments:
+    - '@app.fogger.faker_generator'
+  
   App\Fogger\Refine\RefineExecutor:
     arguments:
     - '@doctrine.dbal.target_connection'
