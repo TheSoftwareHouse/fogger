@@ -13,9 +13,12 @@ class SchemaManipulator
 
     private $targetSchema;
 
+    private $targetConnection;
+
     public function __construct(Connection $source, Connection $target)
     {
         $this->sourceConnection = $source;
+        $this->targetConnection = $target;
         $this->sourceSchema = $source->getSchemaManager();
         $this->targetSchema = $target->getSchemaManager();
     }
@@ -28,13 +31,22 @@ class SchemaManipulator
         $sourceTables = $this->sourceSchema->listTables();
         /** @var DBAL\Table $table */
         foreach ($sourceTables as $table) {
+            $primary = NULL;
+            $auto_increments = NULL;
             foreach ($table->getColumns() as $column) {
-                $column->setAutoincrement(false);
+                if ($column->getAutoincrement()) {
+                    $auto_increments[] = clone $column;
+                    $column->setAutoincrement(false);
+
+                }
             }
             foreach ($table->getForeignKeys() as $fk) {
                 $table->removeForeignKey($fk->getName());
             }
             foreach ($table->getIndexes() as $index) {
+                if ($index->getName() == "PRIMARY") {
+                    $primary = $index;
+                }
                 $table->dropIndex($index->getName());
             }
             if (!$table->hasOption('collate')) {
@@ -44,28 +56,36 @@ class SchemaManipulator
                 );
             }
             $this->targetSchema->createTable($table);
-        }
-    }
-
-    private function recreateIndexesOnTable(DBAL\Table $table)
-    {
-        foreach ($table->getIndexes() as $index) {
-            echo(sprintf(
-                "  - %s's index %s on %s\n",
-                $table->getName(),
-                $index->getName(),
-                implode(', ', $index->getColumns())
-            ));
-            $this->targetSchema->createIndex($index, $table->getName());
-        }
-        /** @var DBAL\Column $column */
-        foreach ($table->getColumns() as $column) {
-            if ($column->getAutoincrement()) {
+            if ($primary !== NULL) {
+                $this->targetSchema->createIndex($primary, $table->getName());
+            }
+            /** @var DBAL\Column $column */
+            foreach ($auto_increments as $column) {
                 $this->targetSchema->alterTable(
                     new DBAL\TableDiff($table->getName(), [], [new DBAL\ColumnDiff($column->getName(), $column)])
                 );
             }
         }
+    }
+
+    private function recreateIndexesOnTable(DBAL\Table $table)
+    {
+        $indexes = [];
+        foreach ($table->getIndexes() as $index) {
+            if ($index->getName() != "PRIMARY") {
+                echo(sprintf(
+                    "  - %s's index %s on %s\n",
+                    $table->getName(),
+                    $index->getName(),
+                    implode(', ', $index->getColumns())
+                ));
+                $indexes[$index->getName()] = $index;
+            }
+
+        }
+        $this->targetSchema->alterTable(
+            new DBAL\TableDiff($table->getName(), [], [], [], $indexes)
+        );
     }
 
     private function recreateForeignKeysOnTable(DBAL\Table $table)
