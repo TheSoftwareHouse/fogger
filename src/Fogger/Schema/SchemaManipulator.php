@@ -13,12 +13,9 @@ class SchemaManipulator
 
     private $targetSchema;
 
-    private $targetConnection;
-
     public function __construct(Connection $source, Connection $target)
     {
         $this->sourceConnection = $source;
-        $this->targetConnection = $target;
         $this->sourceSchema = $source->getSchemaManager();
         $this->targetSchema = $target->getSchemaManager();
     }
