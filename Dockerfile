@@ -56,7 +56,7 @@ RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-di
             pdo_sqlsrv
 
 # Composer
-RUN wget https://getcomposer.org/composer.phar && mv composer.phar /usr/bin/composer && chmod +x /usr/bin/composer
+RUN wget https://raw.githubusercontent.com/composer/getcomposer.org/master/web/download/1.9.3/composer.phar && mv composer.phar /usr/bin/composer && chmod +x /usr/bin/composer
 
 
 RUN mkdir /fogger && chmod 777 /fogger
