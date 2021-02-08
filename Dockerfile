@@ -34,8 +34,8 @@ RUN apt-get install -y curl gnupg2 apt-transport-https && \
 
 RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
     && docker-php-ext-configure pdo_dblib --with-libdir=/lib/x86_64-linux-gnu \
-    && pecl install sqlsrv \
-    && pecl install pdo_sqlsrv \
+    && pecl install sqlsrv-5.8.1 \
+    && pecl install pdo_sqlsrv-5.8.1 \
     && docker-php-ext-install \
             iconv \
             mbstring \
