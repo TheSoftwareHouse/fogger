@@ -92,6 +92,8 @@ class FinishCommand extends Command
             $this->schemaManipulator->recreateIndexes();
             $output->writeln(' - recreating foreign keys...');
             $this->schemaManipulator->recreateForeignKeys();
+            $output->writeln(' - updating auto_increments...');
+            $this->schemaManipulator->updateAutoIncrements();
         } catch (\Exception $exception) {
             $this->outputMessage(sprintf("There has been an error:\n\n%s", $exception->getMessage()), $io);
 

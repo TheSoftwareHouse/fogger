@@ -16,6 +16,7 @@ class SchemaManipulator
     public function __construct(Connection $source, Connection $target)
     {
         $this->sourceConnection = $source;
+        $this->targetConnection = $target;
         $this->sourceSchema = $source->getSchemaManager();
         $this->targetSchema = $target->getSchemaManager();
     }
@@ -96,6 +97,29 @@ class SchemaManipulator
                 implode('_', $fk->getForeignColumns())
             ));
             $this->targetSchema->createForeignKey($fk, $table->getName());
+        }
+    }
+
+    public function updateAutoIncrements()
+    {
+        $sourceTables = $this->sourceSchema->listTables();
+        foreach ($sourceTables as $table) {
+            foreach ($table->getColumns() as $column) {
+                if ($column->getAutoincrement()) {
+                    $auto_inc = $this->sourceConnection->fetchAssoc(
+                        "SHOW TABLE STATUS WHERE Name LIKE '".$table->getName()."'"
+                    )['Auto_increment'];
+                    echo(sprintf(
+                        "  - %s auto_increment to %s\n",
+                        $table->getName(),
+                        $auto_inc
+                    ));
+                    $this->targetConnection->query(
+                        "ALTER TABLE ".$table->getName()." AUTO_INCREMENT = ". $auto_inc
+                    );
+                    break;
+                }
+            }
         }
     }
 
