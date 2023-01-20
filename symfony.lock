@@ -221,9 +221,6 @@
     "symfony/inflector": {
         "version": "v4.1.4"
     },
-    "symfony/orm-pack": {
-        "version": "v1.0.5"
-    },
     "symfony/polyfill-mbstring": {
         "version": "v1.9.0"
     },
@@ -250,9 +247,6 @@
     },
     "symfony/serializer": {
         "version": "v4.1.4"
-    },
-    "symfony/serializer-pack": {
-        "version": "v1.0.1"
     },
     "symfony/translation": {
         "version": "3.3",

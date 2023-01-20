@@ -4,7 +4,7 @@ parameters:
     # environment variables are not available yet.
     # You should not need to change this value.
     env(DATABASE_URL): ''
-    env(CHARSET): 'utf8'
+    env(CHARSET): 'utf8mb3'
     env(COLLATE): 'utf8_general_ci'
     env(REDIS_URL): 'redis://redis'
     env(REDIS_MESSAGE_URL): 'redis://redis'
