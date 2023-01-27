@@ -11,6 +11,8 @@ class SchemaManipulator
 
     private $sourceConnection;
 
+    private $targetConnection;
+
     private $targetSchema;
 
     public function __construct(Connection $source, Connection $target)
@@ -106,9 +108,9 @@ class SchemaManipulator
         foreach ($sourceTables as $table) {
             foreach ($table->getColumns() as $column) {
                 if ($column->getAutoincrement()) {
-                    $auto_inc = $this->sourceConnection->fetchAssoc(
+                    $auto_inc = floor($this->sourceConnection->fetchAssoc(
                         "SHOW TABLE STATUS WHERE Name LIKE '".$table->getName()."'"
-                    )['Auto_increment'];
+                    )['Auto_increment'] * 1.1);
                     echo(sprintf(
                         "  - %s auto_increment to %s\n",
                         $table->getName(),
