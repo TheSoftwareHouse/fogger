@@ -1,5 +1,8 @@
 FROM php:7.2.3
 
+# Stretch moved to archive server fix - https://lists.debian.org/debian-devel-announce/2023/03/msg00006.html
+RUN echo "deb http://archive.debian.org/debian stretch main" > /etc/apt/sources.list
+
 # Install PHP extensions deps
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
