@@ -1,11 +1,13 @@
-FROM php:7.2.3
+FROM php:latest
 
 # Install PHP extensions deps
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
+        libwebp-dev \
         libpq-dev \
         libzip-dev \
         libpng-dev \
+        libxpm-dev \
         openssh-server \
         libxrender1 \
         libfontconfig1 \
@@ -32,13 +34,13 @@ RUN apt-get install -y curl gnupg2 apt-transport-https && \
     apt-get -y update && \
     export ACCEPT_EULA=Y && apt-get -y install msodbcsql17 mssql-tools
 
-RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
+RUN docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ \
     && docker-php-ext-configure pdo_dblib --with-libdir=/lib/x86_64-linux-gnu \
     && pecl install sqlsrv \
     && pecl install pdo_sqlsrv \
     && docker-php-ext-install \
             iconv \
-            mbstring \
+ ##           mbstring \
             bcmath \
             intl \
             gd \
@@ -63,8 +65,13 @@ RUN mkdir /fogger && chmod 777 /fogger
 COPY . /app
 WORKDIR /app
 
+# Set composer superuser
+ENV COMPOSER_ALLOW_SUPERUSER=1 
+
 #RUN composer install --no-dev
-RUN composer install
+RUN composer config --no-plugins allow-plugins.symfony/flex true
+RUN composer update 
+##RUN composer install
 
 ENTRYPOINT ["php", "bin/console"]
 CMD ["--help"]

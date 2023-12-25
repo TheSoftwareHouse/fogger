@@ -8,8 +8,8 @@ services:
     - .:/app
     - ./var/:/fogger
     environment:
-      SOURCE_DATABASE_URL: mysql://user:pass@source:3306/source
-      TARGET_DATABASE_URL: mysql://user:pass@target:3306/target
+      SOURCE_DATABASE_URL: postgresql://dba:qweasd@MSK-REPL-4.ati.dom:5432/dba_test
+      TARGET_DATABASE_URL: postgresql://dba:qweasd@MSK-REPL-4.ati.dom:5432/dba_test_1
       RABBITMQ_URL: amqp://user:pass@rabbit:5672
       REDIS_URL: redis://redis
   worker:
@@ -20,25 +20,11 @@ services:
     - .:/app
     - ./var/:/fogger
     environment:
-      SOURCE_DATABASE_URL: mysql://user:pass@source:3306/source
-      TARGET_DATABASE_URL: mysql://user:pass@target:3306/target
+      SOURCE_DATABASE_URL: postgresql://dba:qweasd@MSK-REPL-4.ati.dom:5432/dba_test
+      TARGET_DATABASE_URL: postgresql://dba:qweasd@MSK-REPL-4.ati.dom:5432/dba_test
       RABBITMQ_URL: amqp://user:pass@rabbit:5672
       REDIS_URL: redis://redis
     restart: always
     command: fogger:consumer
   redis:
     image: redis:4
-  source:
-    environment:
-      MYSQL_DATABASE: source
-      MYSQL_PASSWORD: pass
-      MYSQL_ROOT_PASSWORD: pass
-      MYSQL_USER: user
-    image: mysql:5.7
-  target:
-    environment:
-      MYSQL_DATABASE: target
-      MYSQL_PASSWORD: pass
-      MYSQL_ROOT_PASSWORD: pass
-      MYSQL_USER: user
-    image: mysql:5.7
